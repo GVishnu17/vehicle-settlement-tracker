@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vehicle Settlement Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1ee;--surface:#fbfcfb;--ink:#17233a;--muted:#5b6678;--line:#cfd7d1;--accent:#1f6b52;--accent-ink:#fff;--due:#b3261e;--part:#9a6200;--ok:#1f6b52;--chip-bg:#e4ebe6;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1713;--surface:#17211c;--ink:#e6ece8;--muted:#9aa8a0;--line:#2c3a33;--accent:#4fb58f;--accent-ink:#06130d;--due:#ff8a80;--part:#f0b44c;--ok:#4fb58f;--chip-bg:#22302a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1713;--surface:#17211c;--ink:#e6ece8;--muted:#9aa8a0;--line:#2c3a33;--accent:#4fb58f;--accent-ink:#06130d;--due:#ff8a80;--part:#f0b44c;--ok:#4fb58f;--chip-bg:#22302a;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:22px;margin:0;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input{font:inherit;color:var(--ink)}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.btn.danger{color:var(--due)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select,input{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+.sel{width:auto}
+.totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-bottom:18px}
+.totals div{padding:12px 14px;border-right:1px solid var(--line)}
+.totals div:last-child{border-right:0;background:var(--chip-bg)}
+.totals small{display:block;color:var(--muted);font-size:12px}
+.totals b{font:500 19px "IBM Plex Mono",ui-monospace,monospace}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:860px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:13px;background:var(--chip-bg)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:14px}
+td:first-child,td:nth-child(2){font-family:inherit}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--chip-bg)}
+tfoot td{font-weight:600;border-bottom:0;background:var(--chip-bg)}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font:500 12px "IBM Plex Sans",sans-serif;border:1px solid currentColor}
+.Paid{color:var(--ok)}.Part{color:var(--part)}.Due{color:var(--due)}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:min(640px,94vw);padding:0;max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dh{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:600;font-size:17px}
+.db{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;overflow:auto}
+.db label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+.full{grid-column:1/-1}
+.pay{display:grid;grid-template-columns:130px 1fr 1fr 36px;gap:6px;margin-bottom:6px}
+.calc{grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--chip-bg);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px}
+.calc div{display:flex;justify-content:space-between;padding:2px 0}
+.calc .tot{border-top:1px solid var(--line);margin-top:4px;padding-top:6px;font-weight:600}
+.df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:space-between}
+@media (max-width:520px){.db{grid-template-columns:1fr}.pay{grid-template-columns:1fr 1fr 36px}.pay input:nth-child(3){grid-column:1/3}}
+@media print{.bar,.df{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Vehicle settlement tracker</h1>
+      <div class="sub">Rate × days, less diesel, shortage and other deductions, 1% TDS, then payments and balance.</div>
+    </div>
+    <div class="bar">
+      <select id="period" class="sel" aria-label="Filter by period"></select>
+      <button class="btn" id="print">Print</button>
+      <button class="btn primary" id="add">Add settlement</button>
+    </div>
+  </header>
+  <div class="totals" id="totals"></div>
+  <div class="scroll"><table>
+    <thead><tr><th>Vehicle</th><th>Party</th><th>Gross</th><th>Diesel</th><th>Shortage</th><th>Other</th><th>TDS 1%</th><th>Net payable</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+    <tbody id="rows"></tbody><tfoot id="foot"></tfoot>
+  </table></div>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="form" style="display:contents" onsubmit="return false">
+  <div class="dh" id="dtitle">Add settlement</div>
+  <div class="db">
+    <div><label for="f_vehicle">Vehicle number</label><input id="f_vehicle" placeholder="AP39WR5049"></div>
+    <div><label for="f_name">Party name</label><input id="f_name"></div>
+    <div><label for="f_period">Period</label><input id="f_period" placeholder="Aug 2026"></div>
+    <div><label for="f_carry">Previous balance</label><input id="f_carry" type="number" step="any"></div>
+    <div><label for="f_rate">Rate per day</label><input id="f_rate" type="number" step="any"></div>
+    <div><label for="f_mult">Days / multiplier</label><input id="f_mult" type="number" step="any"></div>
+    <div><label for="f_diesel">Diesel</label><input id="f_diesel" type="number" step="any"></div>
+    <div><label for="f_short">Shortage</label><input id="f_short" type="number" step="any"></div>
+    <div class="full"><label for="f_other">Other deductions (for example buckets)</label><input id="f_other" type="number" step="any"></div>
+    <div class="full"><label>Payments</label><div id="pays"></div><button type="button" class="btn" id="addpay">Add payment</button></div>
+    <div class="calc" id="calc"></div>
+  </div>
+  <div class="df">
+    <button type="button" class="btn danger" id="del">Delete</button>
+    <span><button type="button" class="btn" id="cancel">Cancel</button> <button type="button" class="btn primary" id="save">Save settlement</button></span>
+  </div>
+</form></dialog>
+
+<script>
+const KEY="vehicle-settlements-v1";
+const $=id=>document.getElementById(id);
+const fmt=n=>(Math.round(n)).toLocaleString("en-IN");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>parseFloat(v)||0;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const seed=()=>[
+ {id:uid(),vehicle:"5049",name:"Sundar",period:"Aug 2026",rate:2373.72,mult:360,diesel:462057,shortage:2647,other:0,carry:0,payments:[{date:"2026-09-24",amt:300000,note:"Cash"},{date:"2026-11-05",amt:85937,note:"Transfer"}]},
+ {id:uid(),vehicle:"2709",name:"Col Bedra",period:"Aug 2026",rate:2513,mult:360,diesel:529507,shortage:8031,other:0,carry:0,payments:[{date:"2026-09-24",amt:300000,note:"Cash"},{date:"2026-11-05",amt:63471,note:"Paid"}]},
+ {id:uid(),vehicle:"4869",name:"",period:"Aug 2026",rate:2366.38,mult:360,diesel:458502,shortage:2873,other:0,carry:85824,payments:[{date:"2026-09-09",amt:110000,note:""},{date:"2026-09-24",amt:301000,note:"Cash"},{date:"2026-11-05",amt:61440,note:"Paid"}]},
+ {id:uid(),vehicle:"(number not visible)",name:"",period:"Aug 2026",rate:2198.04,mult:360,diesel:418552,shortage:6165,other:0,carry:0,payments:[{date:"2026-09-24",amt:300000,note:"Cash"},{date:"2026-11-05",amt:62912,note:"Paid"}]}
+];
+let data=[],editing=null,pays=[];
+function load(){try{const s=localStorage.getItem(KEY);data=s?JSON.parse(s):seed()}catch(e){data=seed()}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function calc(e){
+ const gross=Math.floor(num(e.rate)*num(e.mult));
+ const sub=gross-num(e.diesel)-num(e.shortage)-num(e.other);
+ const tds=Math.max(0,Math.floor(sub*0.01));
+ const net=sub-tds;
+ const paid=(e.payments||[]).reduce((a,p)=>a+num(p.amt),0);
+ const bal=net+num(e.carry)-paid;
+ const status=bal<=0?"Paid":paid>0?"Part":"Due";
+ return {gross,sub,tds,net,paid,bal,status};
+}
+function render(){
+ const sel=$("period"),cur=sel.value||"All";
+ const periods=[...new Set(data.map(d=>d.period).filter(Boolean))];
+ sel.innerHTML=["All",...periods].map(p=>`<option ${p===cur?"selected":""}>${esc(p)}</option>`).join("");
+ const list=data.filter(d=>sel.value==="All"||d.period===sel.value);
+ const T={gross:0,diesel:0,shortage:0,other:0,tds:0,net:0,paid:0,bal:0};
+ $("rows").innerHTML=list.length?list.map(e=>{const c=calc(e);
+  T.gross+=c.gross;T.diesel+=num(e.diesel);T.shortage+=num(e.shortage);T.other+=num(e.other);T.tds+=c.tds;T.net+=c.net;T.paid+=c.paid;T.bal+=c.bal;
+  return `<tr data-id="${e.id}"><td>${esc(e.vehicle)}</td><td>${esc(e.name)||"–"}</td><td>${fmt(c.gross)}</td><td>${fmt(e.diesel)}</td><td>${fmt(e.shortage)}</td><td>${fmt(e.other)}</td><td>${fmt(c.tds)}</td><td>${fmt(c.net)}</td><td>${fmt(c.paid)}</td><td>${fmt(c.bal)}</td><td><span class="chip ${c.status}">${c.status==="Part"?"Part paid":c.status==="Paid"?"Settled":"Due"}</span></td></tr>`}).join(""):`<tr><td colspan="11" class="empty">No settlements yet. Select “Add settlement” to enter the first vehicle.</td></tr>`;
+ $("foot").innerHTML=list.length?`<tr><td>Total</td><td></td><td>${fmt(T.gross)}</td><td>${fmt(T.diesel)}</td><td>${fmt(T.shortage)}</td><td>${fmt(T.other)}</td><td>${fmt(T.tds)}</td><td>${fmt(T.net)}</td><td>${fmt(T.paid)}</td><td>${fmt(T.bal)}</td><td></td></tr>`:"";
+ $("totals").innerHTML=[["Vehicles",list.length],["Gross","₹"+fmt(T.gross)],["Net payable","₹"+fmt(T.net)],["Paid","₹"+fmt(T.paid)],["Balance due","₹"+fmt(T.bal)]].map(([k,v])=>`<div><small>${k}</small><b>${v}</b></div>`).join("");
+}
+function payRows(){
+ $("pays").innerHTML=pays.map((p,i)=>`<div class="pay"><input type="date" value="${esc(p.date)}" data-i="${i}" data-k="date" aria-label="Payment date"><input type="number" step="any" value="${p.amt}" data-i="${i}" data-k="amt" placeholder="Amount" aria-label="Payment amount"><input value="${esc(p.note)}" data-i="${i}" data-k="note" placeholder="Note (cash, transfer)" aria-label="Payment note"><button type="button" class="btn" data-rm="${i}" aria-label="Remove payment">×</button></div>`).join("");
+}
+function formEntry(){return{rate:$("f_rate").value,mult:$("f_mult").value,diesel:$("f_diesel").value,shortage:$("f_short").value,other:$("f_other").value,carry:$("f_carry").value,payments:pays}}
+function preview(){
+ const c=calc(formEntry()),r=(k,v,cls="")=>`<div class="${cls}"><span>${k}</span><span>${v}</span></div>`;
+ $("calc").innerHTML=r("Gross",fmt(c.gross))+r("After deductions",fmt(c.sub))+r("TDS 1%",fmt(c.tds))+r("Net payable",fmt(c.net))+r("Paid",fmt(c.paid))+r("Balance due",fmt(c.bal),"tot");
+}
+function openForm(id){
+ editing=id;const e=data.find(d=>d.id===id)||{rate:"",mult:360,diesel:"",shortage:"",other:"",carry:"",payments:[],period:$("period").value!=="All"?$("period").value:""};
+ $("dtitle").textContent=id?"Edit settlement":"Add settlement";
+ $("del").style.visibility=id?"visible":"hidden";
+ $("f_vehicle").value=e.vehicle||"";$("f_name").value=e.name||"";$("f_period").value=e.period||"";
+ ["rate","mult","diesel","other","carry"].forEach(k=>$("f_"+k).value=e[k]??"");$("f_short").value=e.shortage??"";
+ pays=(e.payments||[]).map(p=>({...p}));payRows();preview();$("dlg").showModal();
+}
+$("add").onclick=()=>openForm(null);
+$("rows").onclick=ev=>{const tr=ev.target.closest("tr[data-id]");if(tr)openForm(tr.dataset.id)};
+$("cancel").onclick=()=>$("dlg").close();
+$("addpay").onclick=()=>{pays.push({date:new Date().toISOString().slice(0,10),amt:"",note:""});payRows();preview()};
+$("pays").oninput=ev=>{const t=ev.target;pays[t.dataset.i][t.dataset.k]=t.value;preview()};
+$("pays").onclick=ev=>{const i=ev.target.dataset.rm;if(i!==undefined){pays.splice(i,1);payRows();preview()}};
+$("form").oninput=preview;
+$("save").onclick=()=>{
+ const v=$("f_vehicle").value.trim();
+ if(!v){$("f_vehicle").focus();return}
+ const e={id:editing||uid(),vehicle:v,name:$("f_name").value.trim(),period:$("f_period").value.trim()||"Unspecified",rate:num($("f_rate").value),mult:num($("f_mult").value),diesel:num($("f_diesel").value),shortage:num($("f_short").value),other:num($("f_other").value),carry:num($("f_carry").value),payments:pays.filter(p=>num(p.amt)).map(p=>({date:p.date,amt:num(p.amt),note:p.note}))};
+ const i=data.findIndex(d=>d.id===e.id);i>=0?data[i]=e:data.push(e);
+ persist();$("dlg").close();render();
+};
+$("del").onclick=()=>{if(confirm("Delete this settlement?")){data=data.filter(d=>d.id!==editing);persist();$("dlg").close();render()}};
+$("period").onchange=render;
+$("print").onclick=()=>window.print();
+load();render();
+</script>
+</body>
+</html>
